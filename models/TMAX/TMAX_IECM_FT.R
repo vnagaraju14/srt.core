@@ -28,7 +28,7 @@ TMAX_IECM_MLE<-function(interFail){
   #
   #   a= Omega , b=Mu , c=theta 
   #
-  #*******************************************
+  #********************************************
   
   #Initial Values 
   a0 <- 1
@@ -264,9 +264,9 @@ TMAX_lnL <- function(x,params){
   # TODO:
   #============================================================================
   n <- length(x)          
-  a <- param$TMAX_aMLE
-  b <- param$TMAX_bMLE
-  c <- param$TMAX_cMLE
+  a <- params$TMAX_aMLE
+  b <- params$TMAX_bMLE
+  c <- params$TMAX_cMLE
   sumln <- 0
   for(i in 1:n)
   {
@@ -290,7 +290,7 @@ TMAX_FaultsRemaining <- function(params,n){
   #----------------------------------------------------------------------------
   # TODO:
   #============================================================================
-  return(floor(param$TMAX_aMLE-n))
+  return(floor(params$TMAX_aMLE-n))
 }
 
 
@@ -337,7 +337,7 @@ TMAX_R_BM_root <- function(params,cur_time,delta, reliability){
   #---------------------------------------------------------------------------
   # TODO:
   #===========================================================================
-  root_equation <- reliability - exp((exp(-exp(((-cur_time + param$TMAX_bMLE)/param$TMAX_cMLE)))*param$TMAX_aMLE)/(1 - exp(-exp((param$TMAX_bMLE/param$TMAX_cMLE)))) - (exp(-exp(((-(cur_time+delta) + param$TMAX_bMLE)/param$TMAX_cMLE)))*param$TMAX_aMLE)/(1 - exp(-exp((param$TMAX_bMLE/param$TMAX_cMLE)))))
+  root_equation <- reliability - exp((exp(-exp(((-cur_time + params$TMAX_bMLE)/params$TMAX_cMLE)))*params$TMAX_aMLE)/(1 - exp(-exp((params$TMAX_bMLE/params$TMAX_cMLE)))) - (exp(-exp(((-(cur_time+delta) + params$TMAX_bMLE)/params$TMAX_cMLE)))*params$TMAX_aMLE)/(1 - exp(-exp((params$TMAX_bMLE/params$TMAX_cMLE)))))
   return(root_equation)
 }
 

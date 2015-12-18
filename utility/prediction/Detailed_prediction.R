@@ -2,32 +2,8 @@
 
 
 get_prediction_k <- function(model,params, t_offset,tn,n){
-	# ! -----> print(">>>>>>>>>")
-	# ! -----> print(params)
-	if("JM_N0" %in% names(params)){
-		est_faults <- JM_MVF_cont(params,tn + t_offset) - JM_MVF_cont(params,tn)
-	}
-	else if("GM_D0" %in% names(params)){
-		est_faults <- GM_MVF_cont(params,tn + t_offset) - GM_MVF_cont(params,tn)
-	}
-	else if("GO_aMLE" %in% names(params)){
-		est_faults <- GO_MVF_cont(params,tn + t_offset) - GO_MVF_cont(params,tn)
-	}
-	else if("DSS_aMLE" %in% names(params)){
-		est_faults <- DSS_MVF_cont(params,tn + t_offset) - DSS_MVF_cont(params,tn)
-	}
-	else if("Wei_aMLE" %in% names(params)){
-		est_faults <- Wei_MVF_cont(params,tn + t_offset) - Wei_MVF_cont(params,tn)
-	}
-	else{
-		est_faults <- "Not Implemented"
-	}
-  # return(floor(est_faults))
-  
-  # est_faults is an expected value, so it may not be a
-  # whole number.  Nevertheless, we return the unaltered
-  # value.
-  
+	
+  est_faults <- get(paste(model, "MVF_cont",sep="_"))(params,tn + t_offset) - get(paste(model, "MVF_cont",sep="_"))(params,tn)
   return(est_faults)
 }
 
@@ -52,8 +28,6 @@ get_prediction_t <- function(model, params, faults, tn, n){
 	time_indexes
 }
 
-# Predict the additional testing time that will be required
-# to achieve the target reliability.
 
 get_reliability_t <- function(model, params, targetRel, missionTime, tn, numFails) {
   if ((targetRel > 0) && (targetRel < 1) && (missionTime > 0)) {
@@ -92,14 +66,9 @@ get_reliability_t <- function(model, params, targetRel, missionTime, tn, numFail
 
 est_t <- function(model,params,tn,steps){
 	est_faults <- get(paste(model,"MVF_cont",sep="_"))(params,tn) # ? ----> Should use floor or not
-
 	est_time_root <- function(tn){
 		return (get(paste(model,"MVF_cont",sep="_"))(params, tn) -(est_faults+steps))
 	}
-	# sol <- uniroot(est_time_root, c(tn,tn+50), extendInt="yes", maxiter=1000, tol=1e-10)$root
-	
-	# Bound the estimation interval
-	
 	sol <- 0
 	interval_left <- tn
 	interval_right <- 2*interval_left
@@ -121,9 +90,7 @@ est_t <- function(model,params,tn,steps){
 	} else {
 	  sol <- Inf
 	}
-	
 	maxiter <- 10000
-	
 	if(is.finite(interval_right) && is.finite(sol)) {
 	  sol <- tryCatch(
 	    stats::uniroot(est_time_root, c(interval_left,interval_right),extendInt="yes", maxiter=maxiter, tol=1e-10)$root,
@@ -142,12 +109,5 @@ est_t <- function(model,params,tn,steps){
 	} else {
 	  sol <- NA
 	}
-	
-	#print("Estimated time for next failure")
-  #print(sol)
   sol
 }
-
-
-
-

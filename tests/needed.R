@@ -1,7 +1,8 @@
 source('tests/test_functions.R')
-
+source('model_testing/data_sets.R')
 #TODO: Should think if this should be sourced here
 # source('model_testing/data_sets.R')
+# reduntant "obj" parameter in MVF and other functions
 
 needed_Finite <- function(obj){
 	ret <- tryCatch(is.logical(obj),
@@ -18,6 +19,7 @@ needed_Finite <- function(obj){
 	return(ret)
 }
 
+
 needed_input <- function(obj){
 	ret <- tryCatch(is_valid_input(obj),
 			warning = function(w){
@@ -32,6 +34,7 @@ needed_input <- function(obj){
 	return(ret)
 }
 
+
 needed_fullname <- function(obj){
 	ret <- tryCatch(is_valid_string(obj),
 			warning = function(w){
@@ -43,6 +46,8 @@ needed_fullname <- function(obj){
 	if(!ret) quit("no",status = -1)
 	return(ret)
 }
+
+
 needed_plotcolor <- function(obj){
 	ret <- tryCatch(is_valid_string(obj),
 			warning = function(w){
@@ -54,6 +59,8 @@ needed_plotcolor <- function(obj){
 	if(!ret) quit("no",status = -1)
 	return(ret)
 }
+
+
 needed_methods <- function(obj){
 	#TODO:
 	#   User can mention many methods with prority order
@@ -100,6 +107,7 @@ needed_params <- function(model){
 	# 		should be able to make of log of missing function instead of just
 	# 		breaking when function is not found
 	# 		ex: 'as.logical' way using 'findFunction' to log it.
+	#		- 'model_approach' is included
 	cat("needed_params :")
 	found_params_function <- tryCatch(as.logical(
 						length(findFunction(
@@ -122,10 +130,17 @@ needed_params <- function(model){
 	}
 	else{
 		# TODO
+		for(i in std_data_sets){
+			cat("	--> DATA-SET :")
+			cat(i)
+			cat("\n")
+			get(paste(model,get(paste(model,"methods",sep="_")),"MLE",sep="_"))(get(i))
+		}
 	}
 	cat(paste(found_params_function,"\n"))
 	return(found_params_function)
 }
+
 
 needed_MVF <- function(model, obj){
 	cat("needed_MVF: ")
@@ -151,10 +166,14 @@ needed_MVF <- function(model, obj){
 	else{
 		# TODO:
 			# test for 'return' of MVF
+
+							# get(paste(model,"MVF",sep="_"))()
+
 	}
 	cat(paste(found_MVF,"\n"))
 	return(found_MVF)
 }
+
 
 needed_MVF_inv <- function(model, obj){
 	cat("needed_MVF_inv :")
@@ -186,6 +205,7 @@ needed_MVF_inv <- function(model, obj){
 
 }
 
+
 needed_MVF_cont <- function(model, obj){
 	cat("needed_MTTF_cont :")
 	found_MVF_cont <- tryCatch(as.logical(
@@ -215,6 +235,7 @@ needed_MVF_cont <- function(model, obj){
 	return(found_MVF_cont)
 }
 
+
 needed_MTTF <- function(model, obj){
 	cat("needed_MTTF :")
 	found_MTTF <- tryCatch(as.logical(
@@ -243,6 +264,7 @@ needed_MTTF <- function(model, obj){
 	return(found_MTTF)
 }
 
+
 needed_FI <- function(model, obj){
 	cat("needed_FI :")
 	found_FI <- tryCatch(as.logical(
@@ -265,6 +287,7 @@ needed_FI <- function(model, obj){
 	cat(paste(found_FI,"\n"))
 	return(found_FI)
 }
+
 
 needed_R <- function(model, obj){
 	cat("needed_R :")
@@ -289,6 +312,7 @@ needed_R <- function(model, obj){
 	return(found_R)
 }
 
+
 needed_lnL <- function(model, obj){
 	cat("needed_lnL :")
 	found_lnL <- tryCatch(as.logical(
@@ -311,6 +335,7 @@ needed_lnL <- function(model, obj){
 	cat(paste(found_lnL,"\n"))
 	return(found_lnL)
 }
+
 
 needed_R_growth <- function(model, obj){
 	cat("needed_R_growth :")
@@ -335,6 +360,7 @@ needed_R_growth <- function(model, obj){
 	return(found_R_growth)
 }
 
+
 needed_FaultsRemaining <- function(model, obj){
 	cat("needed_FaultsRemaining:")
 	found_FaultsRemaining <- tryCatch(as.logical(
@@ -357,6 +383,7 @@ needed_FaultsRemaining <- function(model, obj){
 	cat(paste(found_FaultsRemaining,"\n"))
 	return(found_FaultsRemaining)
 }
+
 
 needed_R_delta <- function(model, obj){
 	cat("needed_R_delta :")
@@ -390,6 +417,9 @@ needed_R_delta <- function(model, obj){
 }
 
 # We dont care how R_Root is found for now
+# Because they may not implement at all
+# checking for return value from target_t is 
+# sufficient
 
 needed_Target_T <- function(model, obj){
 	cat("needed_Target_T :")

@@ -42,7 +42,9 @@ Da<- function(a){
   da=(n/a)-(1/2)*pracma::erfc((b-log(tVec[n]))/sqrt(2)*c)
   return(da)
 }
-ao<- stats::uniroot(Da, c(0,200), maxiter=1e15, tol=1e-10, extendInt="yes")$root
+
+
+ao<- stats::uniroot(Da, c(0,200), maxiter=1e8, tol=1e-10, extendInt="yes")$root
 
 
 Db <- function(brule){
@@ -58,6 +60,7 @@ Db <- function(brule){
   
 }
 
+
 Dc<- function(crule){
   secondterm <- 0
   b<- brule
@@ -68,8 +71,8 @@ Dc<- function(crule){
   }
   dc=-n/c+ secondterm-(n*exp(-(b-log(tVec[n]))^2/(2*c^2))*(sqrt(2/pi)*(b-log(tVec[n]))))/((c^2)*(pracma::erfc((b-log(tVec[n]))/(sqrt(2)*c))))
   return(dc)
- 
 }
+
 
 lnLa <- function(ao,brule,crule){
   ao<- stats::uniroot(Da, c(0,200), maxiter=1e4, tol=1e-10, extendInt="yes")$root
@@ -129,7 +132,7 @@ aHat<- 272/((pracma::erfc((brule-log(tVec[n]))/(sqrt(2)*crule))))
 faulremain<- aHat-n
 
 
-LNORM_params <-  data.frame("a"=aHat,"brule"=brule,"crule"=crule)
+LNORM_params <-  data.frame("LNORM_a"=aHat,"LNORM_mu"=brule,"LNORM_sigma"=crule)
 return(LNORM_params)
 }
 
@@ -149,17 +152,19 @@ LNORM_MVF <- function(param,d) {
   n <- length(d$FT)
   r <- data.frame()
   fail_number <- c(1:n)
+  print(d)
 
    
-  cumFailures <- (1/2)*param$a*((pracma::erfc((param$mu-log(d$FT))/(sqrt(2)*param$sigma))))
+  cumFailures <- (1/2)*param$LNORM_a*((pracma::erfc((param$LNORM_mu-log(d$FT))/(sqrt(2)*param$LNORM_sigma))))
     
   
 
   r <- data.frame(cumFailures, d$FT, rep("LNORM", n))
   names(r) <- c("Failure","Time", "Model")
   r
-
 }
+
+
 LNORM_MTTF <- function(param,d){
   #------------------------------------------------------------------------
   # This function MTTF of given d with parameters
@@ -175,11 +180,12 @@ LNORM_MTTF <- function(param,d){
   n <- length(d$FT)
   r <-data.frame()
   fail_number <- c(0:(n-1))
-  IFTimes <- 1/(exp(-(param$mu-Log(d$FT))^2/2*param$sigma^2))/sqrt(2*pi)*param$sigma*d$FT
+  IFTimes <- 1/(exp(-(param$LNORM_mu-log(d$FT))^2/2*param$LNORM_sigma^2))/sqrt(2*pi)*param$LNORM_sigma*d$FT
   r <- data.frame(c(1:n),IFTimes, rep("LNORM", n))
   names(r) <- c("Failure_Number","MTTF","Model")
   r  
 }
+
 
 LNORM_FI <- function(param,d){
   #------------------------------------------------------------------------
@@ -196,8 +202,8 @@ LNORM_FI <- function(param,d){
   n <- length(d$FT)
   r <-data.frame()
   fail_number <- c(1:n)
-  failIntensity <- (exp(-(param$sigma-Log(d$FT))^2/2*param$sigma^2))/sqrt(2*pi)*param$sigma*d$FT
-  r <- data.frame(fail_number,failIntensity, rep("JM",n))
+  failIntensity <- (exp(-(param$LNORM_sigma-log(d$FT))^2/2*param$LNORM_sigma^2))/sqrt(2*pi)*param$LNORM_sigma*d$FT
+  r <- data.frame(fail_number,failIntensity, rep("LNORM",n))
   names(r) <- c("Failure_Count","Failure_Rate","Model")
   r  
 }
@@ -219,12 +225,14 @@ LNORM_R <- function(param,d){
   cumulr <-data.frame()
   for(i in 1:n){
     r[i,1] <- d$FT[i]
-    r[i,2] <- 1- (1/2)*((pracma::erfc((param$mu-log(d$FT[i]))/(sqrt(2)*param$sigma))))
+    r[i,2] <- 1- (1/2)*((pracma::erfc((param$LNORM_mu-log(d$FT[i]))/(sqrt(2)*param$LNORM_sigma))))
   }
   r <- data.frame(r[1],r[2], rep("LNORM", n))
   names(r) <- c("Time","Reliability","Model")
   r
 }
+
+
 LNORM_lnL <- function(x,params){
   #----------------------------------------------------------------------------
   # This computes Log-Likelihood for a given data x and parameters
@@ -239,19 +247,20 @@ LNORM_lnL <- function(x,params){
   n <- length(x)          
   firstterm <- 0
   secondterm<- 0
-  b<- mu
-  c<- sigma
+  b<- params$LNORM_mu
+  c<- params$LNORM_sigma
   for(i in 1:n){
-    firstterm=firstterm + ((b-log(tVec[i]))^2)/(2*c^2)
+    firstterm=firstterm + ((b-log(x[i]))^2)/(2*c^2)
   }
   for(i in 1:n){
-    secondterm=secondterm+log(d$FT[i]*c*sqrt(2*pi))
+    secondterm=secondterm+log(x[i]*c*sqrt(2*pi))
   }
-  lnL= -n-firstterm-secondterm+n*log((272)/((pracma::erfc((b-log(D$FT[n]))/(sqrt(2)*c)))))
+  lnL= -n-firstterm-secondterm+n*log((272)/((pracma::erfc((b-log(x[n]))/(sqrt(2)*c)))))
   
   return(lnL)
 }
 #Faults Remaining
+
 
 LNORM_FaultsRemaining <- function(params,n){
   #----------------------------------------------------------------------------
@@ -264,7 +273,7 @@ LNORM_FaultsRemaining <- function(params,n){
   #----------------------------------------------------------------------------
   # TODO:
   #============================================================================
-  return(floor(params$a-n))
+  return(floor(params$LNORM_a-n))
 }
 
 
@@ -304,18 +313,17 @@ LNORM_R_growth <- function(params,d,delta){
 
 
 
-
 LNORM_MVF_inv <- function(param,d) {
   n <- length(d$FN)
   r <- data.frame()
-  cumFailTimes <- exp(sqrt(2)*param$sigma* invErf((2*LNORM_MVF_cont)/param$a -param$mu))
-  r <- data.frame(d$FN,cumFailTimes, rep("GO", n))
+  cumFailTimes <- exp(sqrt(2)*param$LNORM_sigma* d$FN/(param$LNORM_a -param$LNORM_mu))
+  r <- data.frame(d$FN,cumFailTimes, rep("LNORM", n))
   names(r) <- c("Failure","Time","Model")
   r
 }
 
 
-LNORM_MVF_cont <- function(params,t){
+LNORM_MVF_cont <- function(param,t){
   #----------------------------------------------------------------------------
   # This function computes MVF at a particular time
   # This is a continuos function of time hence the name 'cont'
@@ -327,8 +335,10 @@ LNORM_MVF_cont <- function(params,t){
   #----------------------------------------------------------------------------
   # TODO:
   #============================================================================
-  return(params (1/2)*param$a*((pracma::erfc((param$mu-log(d$FT))/(sqrt(2)*param$sigma)))))
+  return((1/2)*param$LNORM_a*((pracma::erfc((param$LNORM_mu-log(t))/(sqrt(2)*param$LNORM_sigma)))))
 }
+
+
 LNORM_R_delta <- function(params,cur_time,delta){
   #----------------------------------------------------------------------------
   # This function computes the Change in Reliability with delta change in time
@@ -339,10 +349,11 @@ LNORM_R_delta <- function(params,cur_time,delta){
   
   # @returns    (numeric)       Change in reliability with delta change in time    
   #---------------------------------------------------------------------------
-  #TODO:
+  # TODO:
   #===========================================================================
   return(exp(-(LNORM_MVF_cont(params,(cur_time+delta)) -LNORM_MVF_cont(params,cur_time))))
 }
+
 
 LNORM_R_root <- function(params,cur_time,delta, reliability){
   #---------------------------------------------------------------------------
@@ -361,6 +372,7 @@ LNORM_R_root <- function(params,cur_time,delta, reliability){
   return(root_equation)
 }
 
+
 maxiter <- 1000
 LNORM_Target_T <- function(params,cur_time,delta, reliability){
   #----------------------------------------------------------------------------
@@ -377,7 +389,7 @@ LNORM_Target_T <- function(params,cur_time,delta, reliability){
   # TODO:
   #===========================================================================
   f <- function(t){
-    return(LNORM_R_BM_root(params,t,delta, reliability))
+    return(LNORM_R_root(params,t,delta, reliability))
   }
   
   current_rel <- LNORM_R_delta(params,cur_time,delta)
@@ -414,7 +426,7 @@ LNORM_Target_T <- function(params,cur_time,delta, reliability){
           if(length(grep("_NOT_ converged",w[1]))>0){
             maxiter <<- floor(maxiter*1.5)
             print(paste("recursive", maxiter,sep='_'))
-            LNORM_Target_T(a,b,cur_time,delta, reliability)
+            LNORM_Target_T(params,cur_time,delta, reliability)
           }
         },
         error = function(e){
@@ -464,7 +476,3 @@ LNORM_R_growth <- function(params,d,delta){
   names(g) <- c("Time","Reliability_Growth","Model")
   g  
 }
-
-
-
-
